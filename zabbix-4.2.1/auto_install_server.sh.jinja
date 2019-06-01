@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -eo pipefail
+shopt -s nullglob
+
+file_dir=`dirname $0`
+if [ $file_dir -eq '.' ]
+then
+    file_dir=`pwd`
+fi
+cd $file_dir
+
+if [ -d /usr/local/zabbix-4.2.1/ ]
+then
+    echo "zabbix has been installed."
+    tar -xvf zabbix-4.2.1.tar.gz
+    #rm -rf /usr/local/httpd/htdocs/*
+    cp -rf zabbix-4.2.1/frontends/php/*      /usr/local/httpd/htdocs/ 
+else
+    tar -xvf zabbix-4.2.1.tar.gz
+    cd zabbix-4.2.1
+    ./configure --enable-server --enable-agent --with-mysql={{mysql_base_dir}}/bin/mysql_config \
+      --with-net-snmp --with-libcurl --with-libxml2 --with-unixodbc \
+      --prefix=/usr/local/zabbix-4.2.1 && make && make install
+    rm -rf /usr/local/httpd/htdocs/*
+    cp -rf frontends/php/*     /usr/local/httpd/htdocs/
+    cd /usr/local/
+    ln -s /usr/local/zabbix-4.2.1 zabbix
+fi
